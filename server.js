@@ -108,6 +108,28 @@ app.post('/api/data', (req, res) => {
 	}
 });
 
+app.delete('/api/data/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	try {
+		pool.query(`DELETE FROM sensor_data WHERE mission_id=${id}`, (err) => {
+			if (err) {
+				throw err;
+			}
+			pool.query(
+				`DELETE FROM mission_data WHERE mission_id=${id}`,
+				(err) => {
+					if (err) {
+						throw err;
+					}
+					res.status(201).json({ message: 'ok' });
+				}
+			);
+		});
+	} catch (err) {
+		console.error(err);
+	}
+});
+
 app.listen(port, () => {
 	console.log(`connection created on http://${hostname}:${port}`);
 });
