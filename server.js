@@ -48,13 +48,12 @@ app.get('/api/data/:id', (req, res) => {
 app.get('/api/mission_data', (req, res) => {
 	try {
 		pool.query(
-			`SELECT * FROM mission_data WHERE mission_id>0`,
+			'SELECT * FROM mission_data WHERE mission_id > 0',
 			(err, result) => {
 				if (err) {
 					throw err;
 				}
-				var data = result.rows;
-				res.status(200).json(data.reduce);
+				res.status(200).json(result.rows);
 			}
 		);
 	} catch (err) {
@@ -89,7 +88,7 @@ app.post('/api/data', (req, res) => {
 					}
 					data.map((items) => {
 						pool.query(
-							`INSERT INTO sensor_data (mission_id, timestamp, temperature, humidity, velocity) VALUES (${last}, NOW(), ${items.temperature}, ${items.humidity}, ${items.velocity})`,
+							`INSERT INTO sensor_data (mission_id, timestamp, temperature, humidity, velocity, tilt, distance) VALUES (${last}, ${items.time}, ${items.temperature}, ${items.humidity}, ${items.velocity}, ${items.tilt}, ${items.distance})`,
 							(err) => {
 								if (err) {
 									throw err;
