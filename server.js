@@ -58,8 +58,40 @@ app.get('/api/mission_data', (req, res) => {
 	}
 });
 
-app.post('/api/mission_data', (req, res) => {
-	const { mission_name } = req.body;
+// app.post('/api/mission_data', (req, res) => {
+// 	const { mission_name } = req.body;
+// 	try {
+// 		pool.query('SELECT mission_id FROM mission_data', (err, result) => {
+// 			if (err) {
+// 				throw err;
+// 			}
+// 			var ids = result.rows;
+// 			var id = [];
+// 			ids.map((data) => {
+// 				id.push(data.mission_id);
+// 			});
+// 			let last = Math.max(...id);
+// 			pool.query(
+// 				`BEGIN;
+//         INSERT INTO mission_data (mission_id, mission_name)
+//         VALUES (${last + 1}, '${mission_name}');
+//         COMMIT;
+//         ROLLBACK;`,
+// 				(err, result) => {
+// 					if (err) {
+// 						throw err;
+// 					}
+// 					res.status(201).send('Process success');
+// 				}
+// 			);
+// 		});
+// 	} catch (err) {
+// 		console.error(err);
+// 	}
+// });
+
+app.post('/api/data', (req, res) => {
+	const { mission_name, data } = req.body;
 	try {
 		pool.query('SELECT mission_id FROM mission_data', (err, result) => {
 			if (err) {
@@ -67,55 +99,37 @@ app.post('/api/mission_data', (req, res) => {
 			}
 			var ids = result.rows;
 			var id = [];
-			ids.map((data) => {
-				id.push(data.mission_id);
-			});
-			let last = Math.max(...id);
+			var last = 0;
+			if (ids == null) {
+				last = 1;
+			} else {
+				ids.map((data) => {
+					id.push(data.mission_id);
+				});
+				let _last = Math.max(...id);
+				last = _last + 1;
+			}
 			pool.query(
-				`BEGIN;
-        INSERT INTO mission_data (mission_id, mission_name)
-        VALUES (${last + 1}, '${mission_name}');
-        COMMIT;
-        ROLLBACK;`,
-				(err, result) => {
+				`INSERT INTO mission_data (mission_id, mission_name) VALUES (${last}, '${mission_name}');`,
+				(err) => {
 					if (err) {
 						throw err;
 					}
-					res.status(201).send('Process success');
+					data.map((items) => {
+						pool.query(
+							`INSERT INTO sensor_data (mission_id, timestamp, temperature, humidity, velocity) VALUES (${last}, NOW(), ${items.temperature}, ${items.humidity}, ${items.velocity})`,
+							(err) => {
+								if (err) {
+									throw err;
+								}
+							}
+						);
+					});
 				}
 			);
 		});
-	} catch (err) {
-		console.error(err);
-	}
-});
 
-app.post('/api/data', (req, res) => {
-	const { mission_name, temperature, humidity, velocity } = req.body;
-	try {
-		pool.query(
-			`SELECT mission_id FROM mission_data WHERE mission_name = '${mission_name}'`,
-			(err, result) => {
-				if (err) {
-					throw err;
-				}
-				var ids = result.rows;
-				var id = ids[0].mission_id;
-				pool.query(
-					`BEGIN;
-				INSERT INTO sensor_data (mission_id, timestamp, temperature, humidity, velocity)
-				VALUES (${id}, NOW(), ${temperature}, ${humidity}, ${velocity});
-				COMMIT;
-				ROLLBACK;`,
-					(err, result) => {
-						if (err) {
-							throw err;
-						}
-						res.status(201).send('Process success');
-					}
-				);
-			}
-		);
+		res.status(200).json({ message: 'ok' });
 	} catch (err) {
 		console.error(err);
 	}
