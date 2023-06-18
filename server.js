@@ -47,48 +47,20 @@ app.get('/api/data/:id', (req, res) => {
 
 app.get('/api/mission_data', (req, res) => {
 	try {
-		pool.query(`SELECT * FROM mission_data`, (err, result) => {
-			if (err) {
-				throw err;
+		pool.query(
+			`SELECT * FROM mission_data WHERE mission_id>0`,
+			(err, result) => {
+				if (err) {
+					throw err;
+				}
+				var data = result.rows;
+				res.status(200).json(data.reduce);
 			}
-			res.status(200).json(result.rows);
-		});
+		);
 	} catch (err) {
 		console.error(err);
 	}
 });
-
-// app.post('/api/mission_data', (req, res) => {
-// 	const { mission_name } = req.body;
-// 	try {
-// 		pool.query('SELECT mission_id FROM mission_data', (err, result) => {
-// 			if (err) {
-// 				throw err;
-// 			}
-// 			var ids = result.rows;
-// 			var id = [];
-// 			ids.map((data) => {
-// 				id.push(data.mission_id);
-// 			});
-// 			let last = Math.max(...id);
-// 			pool.query(
-// 				`BEGIN;
-//         INSERT INTO mission_data (mission_id, mission_name)
-//         VALUES (${last + 1}, '${mission_name}');
-//         COMMIT;
-//         ROLLBACK;`,
-// 				(err, result) => {
-// 					if (err) {
-// 						throw err;
-// 					}
-// 					res.status(201).send('Process success');
-// 				}
-// 			);
-// 		});
-// 	} catch (err) {
-// 		console.error(err);
-// 	}
-// });
 
 app.post('/api/data', (req, res) => {
 	const { mission_name, data } = req.body;
@@ -125,6 +97,7 @@ app.post('/api/data', (req, res) => {
 							}
 						);
 					});
+					//iya maaf yaa agak males bikin rapih
 				}
 			);
 		});
